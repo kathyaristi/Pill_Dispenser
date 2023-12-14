@@ -1,0 +1,334 @@
+#include <Servo.h>
+#include <LiquidCrystal.h> 
+#include <TimeLib.h>
+#include <EEPROM.h>
+#include <Wire.h>
+//#include <ds3231.h>
+#include "RTClib.h"
+
+ RTC_DS3231 rtc;
+ 
+//struct ts t; 
+
+LiquidCrystal lcd(13, 12, 11, 10, 9, 8);
+Servo myservo;
+int speakerPin = 7;               //the pin that buzzer is connected to
+int firstKeyPin = 2; // where to put buttons
+int secondKeyPin = 3;
+int thirdKeyPin = 4;
+int angle=0;
+int tube; // for what mode the arduino is in. 0 for not setting a time, 1 - 3 for each tube
+unsigned long tube1[2]; // holds hours, minutes
+int tubearray;
+int timeset();
+//time_t prevDisplay = now();
+unsigned long temphour = 13;
+void DisplayClock();
+void servostuff();
+
+
+void setup()
+{
+ if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
+
+  if (rtc.lostPower()) {
+    Serial.println("RTC lost power, lets set the time!");
+    
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
+  
+  lcd.begin(16,2);
+  Wire.begin();
+
+  pinMode(speakerPin, OUTPUT);    // set the output pin for the speaker
+    //set the button pins as inputs
+  pinMode(firstKeyPin, INPUT_PULLUP);
+  pinMode(secondKeyPin, INPUT_PULLUP);
+  pinMode(thirdKeyPin, INPUT_PULLUP);
+  pinMode(speakerPin, OUTPUT);
+  myservo.attach(1);
+  //setTime(2,36,0,9,3,2022); // Another way to set
+  // the time
+ // digitalClockDisplay(hour(), minute(), second());
+}
+
+void loop() {
+  
+while (digitalRead(firstKeyPin) == HIGH){
+  lcd.clear();
+ DisplayClock();
+  servostuff();
+}
+
+
+
+    unsigned long hours = 0;
+    unsigned long minutes = 0;
+  //  bool done = false;
+
+      do{
+      
+      if (digitalRead(firstKeyPin) == LOW){
+
+    //  delay(100);
+   
+    
+        hours ++;
+        
+        if (hours == 24) 
+        {
+          hours = 0;
+        }
+
+         lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("hour");
+        lcd.setCursor(9,0);
+        lcd.print(hours);
+      }
+      
+      if (digitalRead(secondKeyPin) == LOW){
+        minutes += 15;
+        if (minutes == 60) 
+        {
+          minutes = 0;
+        }
+
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("minute");
+        lcd.setCursor(9,0);
+        lcd.print(minutes);
+        
+     //   digitalClockDisplay(hours, minutes, second());
+        delay(100);
+      }  
+
+         delay(100);
+  }
+  while(digitalRead(thirdKeyPin) == HIGH); // normal clock mode
+
+         tube = 0;
+    
+        tube1[0] = hours;
+        tube1[1] = minutes;
+
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("hour set");
+        lcd.setCursor(9,0);
+        lcd.print(hours);
+
+        lcd.setCursor(0,1);
+        lcd.print("min set");
+        lcd.setCursor(9,1);
+        lcd.print(minutes);
+        delay(1000);
+
+        servostuff();
+      }
+
+      
+  
+  
+/*
+      if (digitalRead(thirdKeyPin) == LOW){
+         tube = 0;
+         done == true;
+    
+        tube1[0] = hours;
+        tube1[1] = minutes;
+
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("hour set");
+        lcd.setCursor(9,0);
+        lcd.print(hours);
+        
+        delay(100);
+
+    //    lcd.clear();
+        lcd.setCursor(0,1);
+        lcd.print("min set");
+        lcd.setCursor(9,1);
+        lcd.print(minutes);
+        
+      }
+      delay(100);
+  }
+  while(done == false); // normal clock mode
+  }
+  
+  /*
+ if (now() != prevDisplay){  //update the display only if the time has changed
+    digitalClockDisplay(hour(), minute(), second()); // show the time
+    prevDisplay = now();
+  }
+  
+  if (hour() == tube1[0] && minute() == tube1[1]){
+   // move the servo to make tube 1 release a pill
+   
+    for (angle=0; angle<180; angle+=1)
+    {
+      myservo.write(angle); //directs servo to go to position in variable 'angle'
+        delay(20);
+      //waits 20ms between servo commands
+    }
+    for (angle=180; angle>=1; angle-=1) //goes from 180 to 0 degrees
+    {
+
+      myservo.write(angle); //moves servo back in opposite direction
+
+      delay(20); //waits 20ms between servo commands
+    }
+
+  }
+*/
+  /*
+  else if (hour() == tube2[0] && minute() == tube2[1]){
+    // move the servo to make tube 2 release a pill
+
+    for (angle=0; angle<180; angle+=1)
+    {
+      myservo.write(angle); //directs servo to go to position in variable 'angle'
+        delay(20);
+      //waits 20ms between servo commands
+    }
+    for (angle=180; angle>=1; angle-=1) //goes from 180 to 0 degrees
+    {
+
+      myservo.write(angle); //moves servo back in opposite direction
+
+      delay(20); //waits 20ms between servo commands
+    }
+    
+  }
+  else if (hour() == tube3[0] && minute() == tube3[1]){
+    // move the servo to make tube 3 release a pill
+    for (angle=0; angle<180; angle+=1)
+    {
+      myservo.write(angle); //directs servo to go to position in variable 'angle'
+        delay(20);
+      //waits 20ms between servo commands
+    }
+    for (angle=180; angle>=1; angle-=1) //goes from 180 to 0 degrees
+    {
+
+      myservo.write(angle); //moves servo back in opposite direction
+
+      delay(20); //waits 20ms between servo commands
+    }
+  }*/
+  
+
+ 
+
+void DisplayClock(){
+
+
+  DateTime now = rtc.now();
+
+    lcd.print(now.hour(), DEC);
+    lcd.print(':');
+    lcd.print(now.minute(), DEC);
+    lcd.print(':');
+    lcd.print(now.second(), DEC);
+    lcd.println();
+
+  delay(100);
+
+  
+}
+
+void servostuff(){
+  
+  DateTime now = rtc.now();
+  
+  if (now.hour() == tube1[0] && now.minute() == tube1[1] && now.second() == 0){
+   // move the servo to make tube 1 release a pill
+
+    lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("timeeee");
+        
+   delay(100);
+    for (angle = 0; angle<180; angle+=1)
+    {
+
+      lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("moved");
+        
+      myservo.write(angle); //directs servo to go to position in variable 'angle'
+        delay(20);
+      //waits 20ms between servo commands
+    }
+    for (angle=180; angle>=1; angle-=1) //goes from 180 to 0 degrees
+    {
+
+      myservo.write(angle); //moves servo back in opposite direction
+
+      delay(20); //waits 20ms between servo commands
+    }
+
+  } 
+
+}
+
+
+//  if (tube == 1){
+//  
+//    digitalClockDisplay(hour(), minute(), second());
+//    int hours = 0;
+//    int minutes = 0;
+//    bool done = false;
+//    do{
+//      
+
+//      if (digitalRead(firstKeyPin) == LOW){
+//        hours ++;
+//        lcd.clear();
+//        lcd.setCursor(0,0);
+//        if (hours == 24) 
+//        {
+//          hours = 0;
+//        }
+//
+//        lcd.print(hours);
+//        lcd.setCursor(0,3);
+//        lcd.print(":");
+//        lcd.setCursor(0,4);
+//        lcd.print(minutes);
+//        
+//       // digitalClockDisplay(hours, minutes, second());
+//        delay(100);
+//      }
+//      if (digitalRead(secondKeyPin) == LOW){
+//        minutes += 15;
+//        if (minutes == 60) 
+//        {
+//          minutes = 0;
+//        }
+//
+//        lcd.print(hours);
+//        lcd.setCursor(0,3);
+//        lcd.print(":");
+//        lcd.setCursor(0,4);
+//        lcd.print(minutes);
+//
+//     //   digitalClockDisplay(hours, minutes, second());
+//        delay(100);
+//      }
+//      if (digitalRead(thirdKeyPin) == LOW){
+//        done = true;
+//        delay(100);
+//      }
+//    } while (done == false);
+//    digitalClockDisplay(hours, minutes, second());
+//    tube1[0] = hours;
+//    tube1[1] = minutes;
+    tube = 0; // normal clock mode
+  }

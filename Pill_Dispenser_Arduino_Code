@@ -8,7 +8,7 @@
 
  RTC_DS3231 rtc;
  
-//struct ts t; 
+//Intialize all our arduino board and all buttons used
 
 LiquidCrystal lcd(13, 12, 11, 10, 9, 8);
 Servo myservo;
@@ -26,6 +26,7 @@ unsigned long temphour = 13;
 void DisplayClock();
 void servostuff();
 
+//Set up the arduino board and time
 
 void setup()
 {
@@ -63,33 +64,30 @@ while (digitalRead(firstKeyPin) == HIGH){
   servostuff();
 }
 
-
-
     unsigned long hours = 0;
     unsigned long minutes = 0;
-  //  bool done = false;
+    bool done = false;
 
       do{
       
+      //If user presses setup hours button, loop through the hour
       if (digitalRead(firstKeyPin) == LOW){
-
-    //  delay(100);
-   
-    
-        hours ++;
         
+        hours ++;
+
         if (hours == 24) 
         {
           hours = 0;
         }
 
-         lcd.clear();
+        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("hour");
         lcd.setCursor(9,0);
         lcd.print(hours);
       }
-      
+
+      //If user presses setup minutes button, loop through the minutes (15-min intervals)
       if (digitalRead(secondKeyPin) == LOW){
         minutes += 15;
         if (minutes == 60) 
@@ -109,6 +107,10 @@ while (digitalRead(firstKeyPin) == HIGH){
 
          delay(100);
   }
+
+  //If user presses save button, save the time in the variable for the first pill
+  // Goal is to have multiple tube for different pills in the future
+
   while(digitalRead(thirdKeyPin) == HIGH); // normal clock mode
 
          tube = 0;
@@ -167,7 +169,9 @@ while (digitalRead(firstKeyPin) == HIGH){
     digitalClockDisplay(hour(), minute(), second()); // show the time
     prevDisplay = now();
   }
-  
+
+//Logic for the physical component to move the gears to release pill
+
   if (hour() == tube1[0] && minute() == tube1[1]){
    // move the servo to make tube 1 release a pill
    
